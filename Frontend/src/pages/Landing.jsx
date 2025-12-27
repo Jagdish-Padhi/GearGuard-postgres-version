@@ -76,12 +76,7 @@ const Landing = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Navigation */}
-      <nav
-        className={`fixed z-50 transition-all duration-300 ease-in-out ${isScrolled
-          ? 'top-0 inset-x-0 bg-white/90 backdrop-blur-md border-b border-secondary-200 shadow-sm'
-          : 'top-4 inset-x-4 bg-white/70 backdrop-blur-md border border-white/40 shadow-xl rounded-2xl'
-          }`}
-      >
+      <nav className="border-b border-secondary-200 bg-white/80 backdrop-blur-md fixed w-full top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
@@ -127,14 +122,14 @@ const Landing = () => {
             </div>
 
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-display font-bold text-secondary-900 mb-6 leading-tight">
-              Enterprise-Grade
+              Fix Breakdowns
               <span className="block mt-2 bg-gradient-to-r from-primary-600 to-primary-800 bg-clip-text text-transparent">
-                Maintenance Management
+                Before They Break You
               </span>
             </h1>
 
             <p className="text-xl sm:text-2xl text-secondary-600 mb-10 max-w-3xl mx-auto leading-relaxed">
-              Stop reacting to breakdowns. Shift to a predictive maintenance culture that protects your bottom line and extends asset lifecycles by years.
+              Centrailze assets, automate maintainance requests, and keep teams moving with real-time visibility
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
@@ -145,12 +140,12 @@ const Landing = () => {
                   className="w-full sm:w-auto shadow-lg hover:shadow-xl"
                   icon={<ArrowRight size={20} />}
                 >
-                  Start Free Trial
+                  Start Managing Assets
                 </Button>
               </Link>
               <Link to="/login">
                 <Button size="lg" variant="outline" className="w-full sm:w-auto">
-                  Watch Demo
+                  Explore Workflow
                 </Button>
               </Link>
             </div>
@@ -304,8 +299,8 @@ const Landing = () => {
             Join hundreds of companies already using GearGuard to streamline their operations and reduce costs.
           </p>
           <Link to="/signup">
-            <Button size="lg" variant="secondary" className="bg-secondary-50 text-primary-700 hover:bg-secondary-100 shadow-2xl hover:shadow-3xl">
-              Start Your Free Trial
+            <Button size="lg" variant="secondary" className="bg-secondary-600 text-primary-700 hover:bg-secondary-900 shadow-2xl hover:shadow-3xl">
+              Join In Now!!
             </Button>
           </Link>
           <p className="mt-6 text-primary-200 text-sm">No credit card required • 14-day free trial • Cancel anytime</p>
