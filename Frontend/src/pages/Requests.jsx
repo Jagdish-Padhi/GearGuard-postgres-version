@@ -1,4 +1,3 @@
-// src/pages/Requests.jsx
 import React, { useState } from 'react';
 import { Plus, Search, AlertCircle, Clock, CheckCircle2, Trash2 } from 'lucide-react';
 import { useApp } from '../context/AppContext';

@@ -1,4 +1,3 @@
-// src/pages/Equipment.jsx
 import React, { useState } from 'react';
 import { Plus, Search, Filter, Package, MapPin, Wrench, AlertTriangle, Trash2, Edit, Eye } from 'lucide-react';
 import { useApp } from '../context/AppContext';

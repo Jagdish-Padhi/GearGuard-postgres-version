@@ -1,4 +1,3 @@
-// src/pages/Settings.jsx
 import React, { useState } from 'react';
 import { User, Bell, Lock, Save, Upload } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
