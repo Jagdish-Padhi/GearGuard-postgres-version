@@ -28,11 +28,11 @@ const Header = ({ toggleSidebar, sidebarOpen }) => {
             </button>
 
             <Link to="/dashboard" className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center shadow-lg p-0">
+              <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-sm p-0">
                 <img
                   src="/logo.jpg"
                   alt="GearGuard logo"
-                  className="w-6 h-6 object-contain"
+                  className="w-10 h-10 object-contain rounded-lg shadow-md"
                 />
               </div>
               <div className="hidden sm:block">

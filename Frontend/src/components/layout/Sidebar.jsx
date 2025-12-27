@@ -64,11 +64,11 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, toggleCollapse }) => {
         {/* Logo section for mobile */}
         <div className="lg:hidden p-6 border-b border-secondary-200">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center shadow-lg p-0">
+            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-sm p-0">
               <img
                 src="/logo.jpg"
                 alt="GearGuard logo"
-                className="w-6 h-6 object-contain"
+                className="w-10 h-10 object-contain rounded-lg shadow-md"
               />
             </div>
             <div>
@@ -82,11 +82,11 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, toggleCollapse }) => {
 
         {/* Logo section for desktop */}
         <div className={`hidden lg:flex items-center ${isCollapsed ? 'justify-center p-4' : 'p-6 gap-3'} border-b border-secondary-200 transition-all duration-300`}>
-          <div className="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center shadow-lg p-0">
+          <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-sm p-0">
             <img
               src="/logo.jpg"
               alt="GearGuard logo"
-              className="w-6 h-6 object-contain"
+              className="w-10 h-10 object-contain rounded-lg shadow-md"
             />
           </div>
           {!isCollapsed && (
