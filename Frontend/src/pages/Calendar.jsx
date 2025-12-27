@@ -1,6 +1,5 @@
-// src/pages/Calendar.jsx
-import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Plus } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { ChevronLeft, ChevronRight, Plus, Calendar as CalendarIcon, Wrench } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import Card from '../components/common/Card';
 import Badge from '../components/common/Badge';
@@ -9,24 +8,38 @@ import Modal from '../components/common/Modal';
 import Input from '../components/common/Input';
 import Select from '../components/common/Select';
 
+
 const Calendar = () => {
   const { requests, equipment, teams, addRequest } = useApp();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showDayModal, setShowDayModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+
   const [formData, setFormData] = useState({
-    subject: '',
+    title: '',
+    description: '',
+    priority: 'MEDIUM',
     equipmentId: '',
     scheduledDate: '',
-    priority: 'medium',
   });
 
+
+  // Get preventive maintenance requests
+  const preventiveRequests = useMemo(() => {
+    return requests.filter(req => req.type === 'PREVENTIVE');
+  }, [requests]);
+
+
+  // Calendar helpers
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
-  const firstDay = new Date(year, month, 1);
-  const lastDay = new Date(year, month + 1, 0);
-  const daysInMonth = lastDay.getDate();
-  const startingDayOfWeek = firstDay.getDay();
+
+  const firstDayOfMonth = new Date(year, month, 1);
+  const lastDayOfMonth = new Date(year, month + 1, 0);
+  const startingDayOfWeek = firstDayOfMonth.getDay();
+  const daysInMonth = lastDayOfMonth.getDate();
 
   const monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -35,264 +48,333 @@ const Calendar = () => {
 
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-  const previousMonth = () => setCurrentDate(new Date(year, month - 1, 1));
-  const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
-  const today = () => setCurrentDate(new Date());
 
-  const getRequestsForDate = (day) => {
-    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    return requests.filter(req => {
+  // Get requests for a specific date
+  const getRequestsForDate = (date) => {
+    return preventiveRequests.filter(req => {
+      if (!req.scheduledDate) return false;
       const reqDate = new Date(req.scheduledDate);
-      const reqDateStr = `${reqDate.getFullYear()}-${String(reqDate.getMonth() + 1).padStart(2, '0')}-${String(reqDate.getDate()).padStart(2, '0')}`;
-      return reqDateStr === dateStr && req.type === 'preventive';
+      return reqDate.getDate() === date &&
+        reqDate.getMonth() === month &&
+        reqDate.getFullYear() === year;
     });
   };
 
-  const calendarDays = [];
-  for (let i = 0; i < startingDayOfWeek; i++) {
-    calendarDays.push(null);
-  }
-  for (let day = 1; day <= daysInMonth; day++) {
-    calendarDays.push(day);
-  }
 
-  const isToday = (day) => {
-    const today = new Date();
-    return day === today.getDate() &&
-      month === today.getMonth() &&
-      year === today.getFullYear();
+  // Generate calendar days
+  const calendarDays = useMemo(() => {
+    const days = [];
+
+    // Empty cells before first day
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      days.push({ day: null, requests: [] });
+    }
+
+    // Days of month
+    for (let day = 1; day <= daysInMonth; day++) {
+      days.push({
+        day,
+        requests: getRequestsForDate(day),
+        isToday: new Date().getDate() === day &&
+          new Date().getMonth() === month &&
+          new Date().getFullYear() === year,
+      });
+    }
+
+    return days;
+  }, [currentDate, preventiveRequests]);
+
+  const handlePrevMonth = () => {
+    setCurrentDate(new Date(year, month - 1, 1));
   };
 
-  const handleDateClick = (day) => {
-    setSelectedDate(day);
-    const dateTime = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}T09:00`;
-    setFormData(prev => ({ ...prev, scheduledDate: dateTime }));
-    setShowCreateModal(true);
+  const handleNextMonth = () => {
+    setCurrentDate(new Date(year, month + 1, 1));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const selectedEquipment = equipment.find(eq => eq.id === formData.equipmentId);
-    if (selectedEquipment) {
-      const teamData = teams.find(t => t.id === selectedEquipment.teamId);
-      const newRequest = {
-        ...formData,
-        type: 'preventive',
-        description: '',
-        equipmentName: selectedEquipment.name,
-        equipmentCategory: selectedEquipment.category,
-        teamId: selectedEquipment.teamId,
-        teamName: teamData?.name || 'Unassigned',
-        createdBy: 'Current User',
-        createdAt: new Date().toISOString(),
-        status: 'new',
-      };
-      addRequest(newRequest);
-      setShowCreateModal(false);
-      setFormData({ subject: '', equipmentId: '', scheduledDate: '', priority: 'medium' });
+  const handleDateClick = (dayData) => {
+    if (!dayData.day) return;
+
+    const clickedDate = new Date(year, month, dayData.day);
+    setSelectedDate({ date: clickedDate, requests: dayData.requests });
+
+    if (dayData.requests.length > 0) {
+      setShowDayModal(true);
+    } else {
+      // Open create modal with pre-filled date
+      const dateStr = clickedDate.toISOString().split('T')[0];
+      setFormData(prev => ({ ...prev, scheduledDate: dateStr }));
+      setShowCreateModal(true);
     }
   };
 
-  const dateRequests = selectedDate ? getRequestsForDate(selectedDate) : [];
+
+  const handleCreateFromDay = () => {
+    setShowDayModal(false);
+    const dateStr = selectedDate.date.toISOString().split('T')[0];
+    setFormData(prev => ({ ...prev, scheduledDate: dateStr }));
+    setShowCreateModal(true);
+  };
+
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    const result = await addRequest({
+      title: formData.title,
+      description: formData.description,
+      type: 'PREVENTIVE',
+      priority: formData.priority,
+      equipmentId: formData.equipmentId,
+      scheduledDate: formData.scheduledDate,
+    });
+
+    setLoading(false);
+
+    if (result.success) {
+      setShowCreateModal(false);
+      resetForm();
+    } else {
+      alert(result.error || 'Failed to create preventive maintenance');
+    }
+  };
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const resetForm = () => {
+    setFormData({
+      title: '',
+      description: '',
+      priority: 'MEDIUM',
+      equipmentId: '',
+      scheduledDate: '',
+    });
+  };
+
+  const getEquipmentName = (req) => {
+    if (req.equipment?.name) return req.equipment.name;
+    const eq = equipment.find(e => e._id === req.equipment);
+    return eq?.name || 'Unknown';
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'NEW': return 'primary';
+      case 'IN_PROGRESS': return 'warning';
+      case 'REPAIRED': return 'success';
+      case 'SCRAP': return 'danger';
+      default: return 'secondary';
+    }
+  };
+
+  // Stats
+  const thisMonthRequests = preventiveRequests.filter(req => {
+    if (!req.scheduledDate) return false;
+    const reqDate = new Date(req.scheduledDate);
+    return reqDate.getMonth() === month && reqDate.getFullYear() === year;
+  });
+
+
+  const pendingThisMonth = thisMonthRequests.filter(req =>
+    req.status === 'NEW' || req.status === 'IN_PROGRESS'
+  ).length;
+
+
+  const completedThisMonth = thisMonthRequests.filter(req =>
+    req.status === 'REPAIRED'
+  ).length;
+
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-display font-bold text-secondary-900">
-          Maintenance Calendar
-        </h1>
-        <p className="text-secondary-600 mt-1">
-          View and schedule preventive maintenance
-        </p>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-display font-bold text-secondary-900">
+            Preventive Maintenance Calendar
+          </h1>
+          <p className="text-secondary-600 mt-1">
+            Schedule and track preventive maintenance
+          </p>
+        </div>
+        <Button
+          variant="primary"
+          icon={<Plus size={20} />}
+          onClick={() => setShowCreateModal(true)}
+        >
+          Schedule Maintenance
+        </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <Card>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-semibold text-secondary-900">
-                {monthNames[month]} {year}
-              </h2>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={today}>
-                  Today
-                </Button>
-                <Button variant="ghost" size="sm" onClick={previousMonth}>
-                  <ChevronLeft size={20} />
-                </Button>
-                <Button variant="ghost" size="sm" onClick={nextMonth}>
-                  <ChevronRight size={20} />
-                </Button>
-              </div>
+      {/* Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <Card>
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-primary-100 rounded-lg">
+              <CalendarIcon size={24} className="text-primary-600" />
             </div>
-
-            <div className="grid grid-cols-7 gap-2 mb-2">
-              {dayNames.map((day) => (
-                <div key={day} className="text-center text-xs font-semibold text-secondary-600 py-2">
-                  {day}
-                </div>
-              ))}
+            <div>
+              <p className="text-sm text-secondary-600">This Month</p>
+              <p className="text-3xl font-bold text-secondary-900">{thisMonthRequests.length}</p>
             </div>
+          </div>
+        </Card>
 
-            <div className="grid grid-cols-7 gap-2">
-              {calendarDays.map((day, index) => {
-                const dayRequests = day ? getRequestsForDate(day) : [];
-                const hasRequests = dayRequests.length > 0;
+        <Card>
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-warning-100 rounded-lg">
+              <Wrench size={24} className="text-warning-600" />
+            </div>
+            <div>
+              <p className="text-sm text-secondary-600">Pending</p>
+              <p className="text-3xl font-bold text-secondary-900">{pendingThisMonth}</p>
+            </div>
+          </div>
+        </Card>
 
-                return (
-                  <div
-                    key={index}
-                    onClick={() => day && handleDateClick(day)}
-                    className={`
-                      min-h-[100px] p-2 rounded-lg border transition-all cursor-pointer
-                      ${!day ? 'bg-secondary-50 border-transparent cursor-default' : ''}
-                      ${day && isToday(day) ? 'border-2 border-primary-500 bg-primary-50' : 'border-secondary-200'}
-                      ${day && hasRequests ? 'bg-success-50 border-success-200' : day ? 'bg-white hover:bg-secondary-50 hover:border-primary-300' : ''}
-                    `}
-                  >
-                    {day && (
-                      <>
-                        <div className="text-right mb-1">
-                          <span className={`text-sm font-medium ${isToday(day) ? 'text-primary-700' : 'text-secondary-900'}`}>
-                            {day}
-                          </span>
-                        </div>
-                        {hasRequests && (
-                          <div className="space-y-1">
-                            {dayRequests.slice(0, 2).map((req) => (
-                              <div
-                                key={req.id}
-                                className="text-xs px-2 py-1 bg-white rounded border border-success-300 truncate font-medium text-success-900"
-                              >
-                                • {req.subject}
-                              </div>
-                            ))}
-                            {dayRequests.length > 2 && (
-                              <div className="text-xs text-success-700 font-medium px-2">
-                                +{dayRequests.length - 2} more
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </>
+        <Card>
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-success-100 rounded-lg">
+              <Wrench size={24} className="text-success-600" />
+            </div>
+            <div>
+              <p className="text-sm text-secondary-600">Completed</p>
+              <p className="text-3xl font-bold text-secondary-900">{completedThisMonth}</p>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* Calendar */}
+      <Card>
+        {/* Calendar Header */}
+        <div className="flex items-center justify-between mb-6">
+          <button
+            onClick={handlePrevMonth}
+            className="p-2 hover:bg-secondary-100 rounded-lg transition-colors"
+          >
+            <ChevronLeft size={24} className="text-secondary-600" />
+          </button>
+
+          <h2 className="text-xl font-semibold text-secondary-900">
+            {monthNames[month]} {year}
+          </h2>
+
+          <button
+            onClick={handleNextMonth}
+            className="p-2 hover:bg-secondary-100 rounded-lg transition-colors"
+          >
+            <ChevronRight size={24} className="text-secondary-600" />
+          </button>
+        </div>
+
+        {/* Day Names */}
+        <div className="grid grid-cols-7 gap-1 mb-2">
+          {dayNames.map(day => (
+            <div key={day} className="text-center text-sm font-medium text-secondary-500 py-2">
+              {day}
+            </div>
+          ))}
+        </div>
+
+        {/* Calendar Grid */}
+        <div className="grid grid-cols-7 gap-1">
+          {calendarDays.map((dayData, index) => (
+            <div
+              key={index}
+              onClick={() => handleDateClick(dayData)}
+              className={`
+                                min-h-[100px] p-2 border border-secondary-200 rounded-lg
+                                ${dayData.day ? 'cursor-pointer hover:bg-secondary-50' : 'bg-secondary-50'}
+                                ${dayData.isToday ? 'border-primary-500 border-2' : ''}
+                            `}
+            >
+              {dayData.day && (
+                <>
+                  <div className={`
+                                        text-sm font-medium mb-1
+                                        ${dayData.isToday ? 'text-primary-600' : 'text-secondary-700'}
+                                    `}>
+                    {dayData.day}
+                  </div>
+
+                  {/* Request indicators */}
+                  <div className="space-y-1">
+                    {dayData.requests.slice(0, 3).map((req, i) => (
+                      <div
+                        key={req._id || i}
+                        className={`
+                                                    text-xs p-1 rounded truncate
+                                                    ${req.status === 'NEW' ? 'bg-primary-100 text-primary-700' : ''}
+                                                    ${req.status === 'IN_PROGRESS' ? 'bg-warning-100 text-warning-700' : ''}
+                                                    ${req.status === 'REPAIRED' ? 'bg-success-100 text-success-700' : ''}
+                                                    ${req.status === 'SCRAP' ? 'bg-danger-100 text-danger-700' : ''}
+                                                `}
+                      >
+                        {req.title}
+                      </div>
+                    ))}
+                    {dayData.requests.length > 3 && (
+                      <div className="text-xs text-secondary-500">
+                        +{dayData.requests.length - 3} more
+                      </div>
                     )}
                   </div>
-                );
-              })}
+                </>
+              )}
             </div>
-          </Card>
+          ))}
         </div>
-
-        <div className="space-y-6">
-          <Card>
-            <div className="flex items-center gap-3 mb-4">
-              <CalendarIcon size={24} className="text-primary-600" />
-              <h3 className="text-lg font-semibold text-secondary-900">
-                {selectedDate ? `${monthNames[month]} ${selectedDate}, ${year}` : 'Select a date'}
-              </h3>
-            </div>
-
-            {selectedDate && dateRequests.length > 0 ? (
-              <div className="space-y-3">
-                {dateRequests.map((request) => (
-                  <div key={request.id} className="p-3 bg-secondary-50 rounded-lg border border-secondary-200">
-                    <div className="flex items-start justify-between mb-2">
-                      <h4 className="text-sm font-medium text-secondary-900">
-                        {request.subject}
-                      </h4>
-                      <Badge variant={request.priority} size="sm">
-                        {request.priority}
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-secondary-600 mb-2">
-                      {request.equipmentName}
-                    </p>
-                    <div className="flex items-center gap-2 text-xs text-secondary-500">
-                      {new Date(request.scheduledDate).toLocaleTimeString([], {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-secondary-500 text-center py-8">
-                {selectedDate ? 'No maintenance scheduled for this date. Click to create one.' : 'Click on a date to schedule maintenance'}
-              </p>
-            )}
-          </Card>
-
-          <Card>
-            <h3 className="text-sm font-semibold text-secondary-900 mb-3">
-              Legend
-            </h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded bg-primary-50 border-2 border-primary-500"></div>
-                <span className="text-secondary-700">Today</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded bg-success-50 border border-success-200"></div>
-                <span className="text-secondary-700">Has preventive maintenance</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded bg-white border border-secondary-200"></div>
-                <span className="text-secondary-700">Available</span>
-              </div>
-            </div>
-          </Card>
-        </div>
-      </div>
+      </Card>
 
       {/* Create Preventive Maintenance Modal */}
       <Modal
         isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        title={`Schedule Maintenance - ${selectedDate ? `${monthNames[month]} ${selectedDate}` : ''}`}
-        size="md"
-        footer={
-          <>
-            <Button variant="ghost" onClick={() => setShowCreateModal(false)}>
-              Cancel
-            </Button>
-            <Button variant="primary" onClick={handleSubmit}>
-              Schedule
-            </Button>
-          </>
-        }
+        onClose={() => { setShowCreateModal(false); resetForm(); }}
+        title="Schedule Preventive Maintenance"
       >
-        <form className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <Input
-            label="Subject"
-            name="subject"
-            value={formData.subject}
-            onChange={(e) => setFormData(prev => ({ ...prev, subject: e.target.value }))}
+            label="Title"
+            name="title"
+            value={formData.title}
+            onChange={handleChange}
             placeholder="e.g., Monthly inspection"
             required
           />
+
+          <div>
+            <label className="block text-sm font-medium text-secondary-700 mb-1">
+              Description
+            </label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              placeholder="Describe the maintenance task..."
+              rows={3}
+              className="w-full px-4 py-2 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              required
+            />
+          </div>
 
           <Select
             label="Equipment"
             name="equipmentId"
             value={formData.equipmentId}
-            onChange={(e) => setFormData(prev => ({ ...prev, equipmentId: e.target.value }))}
+            onChange={handleChange}
             options={[
-              { value: '', label: 'Select equipment...' },
-              ...equipment.map(eq => ({
-                value: eq.id,
-                label: `${eq.name} (${eq.serialNumber})`
-              }))
+              { value: '', label: 'Select Equipment' },
+              ...equipment
+                .filter(eq => eq.status === 'ACTIVE')
+                .map(eq => ({ value: eq._id, label: `${eq.name} (${eq.serialNumber})` })),
             ]}
-            required
-          />
-
-          <Input
-            label="Scheduled Date & Time"
-            name="scheduledDate"
-            type="datetime-local"
-            value={formData.scheduledDate}
-            onChange={(e) => setFormData(prev => ({ ...prev, scheduledDate: e.target.value }))}
             required
           />
 
@@ -300,14 +382,82 @@ const Calendar = () => {
             label="Priority"
             name="priority"
             value={formData.priority}
-            onChange={(e) => setFormData(prev => ({ ...prev, priority: e.target.value }))}
+            onChange={handleChange}
             options={[
-              { value: 'low', label: 'Low' },
-              { value: 'medium', label: 'Medium' },
-              { value: 'high', label: 'High' },
+              { value: 'LOW', label: 'Low' },
+              { value: 'MEDIUM', label: 'Medium' },
+              { value: 'HIGH', label: 'High' },
             ]}
           />
+
+          <Input
+            label="Scheduled Date"
+            name="scheduledDate"
+            type="date"
+            value={formData.scheduledDate}
+            onChange={handleChange}
+            required
+          />
+
+          <div className="flex justify-end gap-3 pt-4">
+            <Button variant="secondary" onClick={() => { setShowCreateModal(false); resetForm(); }}>
+              Cancel
+            </Button>
+            <Button type="submit" variant="primary" loading={loading}>
+              Schedule
+            </Button>
+          </div>
         </form>
+      </Modal>
+
+      {/* Day Detail Modal */}
+      <Modal
+        isOpen={showDayModal}
+        onClose={() => { setShowDayModal(false); setSelectedDate(null); }}
+        title={selectedDate ? `Maintenance - ${selectedDate.date.toLocaleDateString()}` : 'Maintenance'}
+      >
+        {selectedDate && (
+          <div className="space-y-4">
+            {selectedDate.requests.length > 0 ? (
+              <div className="space-y-3">
+                {selectedDate.requests.map((req) => (
+                  <div key={req._id} className="p-4 bg-secondary-50 rounded-lg">
+                    <div className="flex items-start justify-between mb-2">
+                      <h4 className="font-semibold text-secondary-900">{req.title}</h4>
+                      <Badge variant={getStatusColor(req.status)} size="sm">
+                        {req.status}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-secondary-600 mb-2">{req.description}</p>
+                    <div className="flex items-center gap-4 text-sm text-secondary-500">
+                      <span>📦 {getEquipmentName(req)}</span>
+                      <Badge
+                        variant={
+                          req.priority === 'HIGH' ? 'danger' :
+                            req.priority === 'MEDIUM' ? 'warning' : 'success'
+                        }
+                        size="sm"
+                      >
+                        {req.priority}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-secondary-600">No maintenance scheduled for this day.</p>
+            )}
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-secondary-200">
+              <Button variant="secondary" onClick={() => setShowDayModal(false)}>
+                Close
+              </Button>
+              <Button variant="primary" icon={<Plus size={16} />} onClick={handleCreateFromDay}>
+                Add Maintenance
+              </Button>
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   );
