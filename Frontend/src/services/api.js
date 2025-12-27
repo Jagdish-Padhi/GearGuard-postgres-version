@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
+const API_URL = import.meta.env.VITE_API_URL || 'https://odoo-hack-25.onrender.com/api/v1';
 
 // axios instance
 const api = axios.create({

@@ -11,7 +11,7 @@
 
 | 🚀 Live Demo | 🎥 Video Walkthrough | 📊 Presentation |
 |:------------:|:-------------------:|:---------------:|
-| [**Launch App**](YOUR_DEPLOYED_LINK_HERE) | [**Watch Demo**](YOUR_VIDEO_LINK_HERE) | [**View PPT**](YOUR_PPT_LINK_HERE) |
+| [**Launch App**](https://frontend-wvdt.onrender.com/) | [**Watch Demo**](YOUR_VIDEO_LINK_HERE) | [**View PPT**](https://drive.google.com/file/d/1zxytV0PYG64SY2SNxegDR8UhI3cJml9J/view?usp=sharing) |
 
 ---
 
