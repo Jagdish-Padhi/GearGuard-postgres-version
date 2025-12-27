@@ -9,13 +9,14 @@ import Select from '../components/common/Select';
 const Signup = () => {
   const navigate = useNavigate();
   const { signup } = useAuth();
-  
+
   const [formData, setFormData] = useState({
-    name: '',
+    fullName: '',
+    username: '',
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'technician',
+    role: 'USER',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -23,6 +24,7 @@ const Signup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
 
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
@@ -37,13 +39,21 @@ const Signup = () => {
     setLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      signup(formData.email, formData.password, formData.name, formData.role);
-      navigate('/dashboard');
+      const result = await signup({
+        fullName: formData.fullName,
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role,
+      });
+
+      if (result.success) {
+        navigate('/dashboard');
+      } else {
+        setError(result.error || 'Signup failed. Please try again.');
+      }
     } catch (err) {
-      setError('Failed to create account. Please try again.');
+      setError('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -57,10 +67,11 @@ const Signup = () => {
   };
 
   const roleOptions = [
-    { value: 'technician', label: 'Technician' },
-    { value: 'manager', label: 'Manager' },
-    { value: 'admin', label: 'Administrator' },
+    { value: 'USER', label: 'User' },
+    { value: 'TECHNICIAN', label: 'Technician' },
+    { value: 'MANAGER', label: 'Manager' },
   ];
+
 
   return (
     <div className="min-h-screen flex">
@@ -78,9 +89,9 @@ const Signup = () => {
                 </h1>
               </div>
             </Link>
-            
+
             <h2 className="text-3xl font-display font-bold text-secondary-900">
-              Create your account
+              Create account
             </h2>
             <p className="mt-2 text-sm text-secondary-600">
               Already have an account?{' '}
@@ -91,7 +102,7 @@ const Signup = () => {
           </div>
 
           <div className="mt-8">
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-5">
               {error && (
                 <div className="bg-danger-50 border border-danger-200 rounded-lg p-4 flex items-start gap-3">
                   <AlertCircle className="text-danger-600 flex-shrink-0 mt-0.5" size={20} />
@@ -100,12 +111,23 @@ const Signup = () => {
               )}
 
               <Input
-                label="Full name"
-                name="name"
+                label="Full Name"
+                name="fullName"
                 type="text"
-                value={formData.name}
+                value={formData.fullName}
                 onChange={handleChange}
                 placeholder="John Doe"
+                icon={<User size={20} />}
+                required
+              />
+
+              <Input
+                label="Username"
+                name="username"
+                type="text"
+                value={formData.username}
+                onChange={handleChange}
+                placeholder="johndoe"
                 icon={<User size={20} />}
                 required
               />
@@ -121,6 +143,14 @@ const Signup = () => {
                 required
               />
 
+              <Select
+                label="Role"
+                name="role"
+                value={formData.role}
+                onChange={handleChange}
+                options={roleOptions}
+              />
+
               <Input
                 label="Password"
                 name="password"
@@ -129,12 +159,11 @@ const Signup = () => {
                 onChange={handleChange}
                 placeholder="••••••••"
                 icon={<Lock size={20} />}
-                helperText="Must be at least 6 characters"
                 required
               />
 
               <Input
-                label="Confirm password"
+                label="Confirm Password"
                 name="confirmPassword"
                 type="password"
                 value={formData.confirmPassword}
@@ -144,35 +173,9 @@ const Signup = () => {
                 required
               />
 
-              <Select
-                label="Role"
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                options={roleOptions}
-                helperText="Select your role in the organization"
-              />
-
-              <div className="flex items-center">
-                <input
-                  id="terms"
-                  name="terms"
-                  type="checkbox"
-                  className="h-4 w-4 rounded border-secondary-300 text-primary-600 focus:ring-primary-500"
-                  required
-                />
-                <label htmlFor="terms" className="ml-2 block text-sm text-secondary-900">
-                  I agree to the{' '}
-                  <a href="#" className="text-primary-600 hover:text-primary-500">
-                    Terms and Conditions
-                  </a>
-                </label>
-              </div>
-
               <Button
                 type="submit"
                 variant="primary"
-                size="lg"
                 className="w-full"
                 loading={loading}
               >
@@ -182,53 +185,20 @@ const Signup = () => {
           </div>
         </div>
       </div>
+      
 
-      {/* Right side - Image/Branding */}
+      {/* Right side - Image/Brand */}
       <div className="hidden lg:block relative w-0 flex-1">
-        <div className="absolute inset-0 bg-gradient-to-br from-success-600 to-success-800">
-          <div className="h-full w-full flex flex-col items-center justify-center text-white p-12">
-            <div className="max-w-md">
-              <h2 className="text-4xl font-display font-bold mb-6">
-                Join thousands of teams
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-600 to-primary-800">
+          <div className="absolute inset-0 bg-black/20"></div>
+          <div className="absolute inset-0 flex items-center justify-center p-12">
+            <div className="text-center text-white">
+              <h2 className="text-4xl font-display font-bold mb-4">
+                Join GearGuard
               </h2>
-              <p className="text-xl text-success-100 mb-8">
-                Start managing your equipment maintenance efficiently with GearGuard today.
+              <p className="text-xl text-primary-100 max-w-md">
+                Start managing your equipment maintenance like a pro.
               </p>
-              <div className="bg-success-700/30 backdrop-blur-sm rounded-xl p-6 space-y-4">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-success-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <span className="text-2xl">📊</span>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">Track Everything</h3>
-                    <p className="text-success-100 text-sm">
-                      Monitor all your equipment and maintenance activities in one place
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-success-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <span className="text-2xl">👥</span>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">Collaborate Better</h3>
-                    <p className="text-success-100 text-sm">
-                      Work seamlessly with your team on maintenance tasks
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-success-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <span className="text-2xl">⚡</span>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">Reduce Downtime</h3>
-                    <p className="text-success-100 text-sm">
-                      Prevent equipment failures with smart scheduling
-                    </p>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
