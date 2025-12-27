@@ -3,6 +3,8 @@ import {
     getCurrentUser,
     updateAccountDetails,
     changePassword,
+    getAllTechnicians,
+    getAllUsers,
 } from "../controllers/user.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
@@ -12,6 +14,8 @@ const router = Router();
 router.use(verifyJWT);
 
 router.get("/me", getCurrentUser);
+router.get("/technicians", getAllTechnicians);
+router.get("/", getAllUsers);
 router.patch("/update", updateAccountDetails);
 router.post("/change-password", changePassword);
 

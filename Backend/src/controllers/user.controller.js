@@ -58,8 +58,36 @@ const changePassword = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, {}, "Password changed successfully"));
 });
 
+// Get all technicians (for team assignment)
+const getAllTechnicians = asyncHandler(async (req, res) => {
+    const technicians = await User.find({ role: "TECHNICIAN" })
+        .select("-password -refreshToken");
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, technicians, "Technicians fetched successfully"));
+});
+
+// Get all users (with optional role filter)
+const getAllUsers = asyncHandler(async (req, res) => {
+    const filter = {};
+    
+    if (req.query.role) {
+        filter.role = req.query.role;
+    }
+
+    const users = await User.find(filter)
+        .select("-password -refreshToken");
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, users, "Users fetched successfully"));
+});
+
 export {
     getCurrentUser,
     updateAccountDetails,
     changePassword,
+    getAllTechnicians,
+    getAllUsers,
 };
