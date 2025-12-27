@@ -11,10 +11,12 @@ import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
-// import Equipment from './pages/Equipment';
-// import Teams from './pages/Teams';
-// import Requests from './pages/Requests';
-// import Calendar from './pages/Calendar';
+import Equipment from './pages/Equipment';
+import Teams from './pages/Teams';
+import Requests from './pages/Requests';
+import Calendar from './pages/Calendar';
+import Reports from './pages/Reports';
+import Settings from './pages/Settings';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -78,12 +80,12 @@ function AppRoutes() {
         }
       >
         <Route path="dashboard" element={<Dashboard />} />
-        {/*<Route path="equipment" element={<Equipment />} />
+        <Route path="equipment" element={<Equipment />} />
         <Route path="teams" element={<Teams />} />
         <Route path="requests" element={<Requests />} />
         <Route path="calendar" element={<Calendar />} />
-        <Route path="reports" element={<Dashboard />} /> 
-        <Route path="settings" element={<Dashboard />} /> {/* Placeholder */}
+        <Route path="reports" element={<Reports />} />
+        <Route path="settings" element={<Settings />} />
       </Route>
 
       {/* Catch all */}
