@@ -9,6 +9,7 @@ import Button from '../components/common/Button';
 import Input from '../components/common/Input';
 import Modal from '../components/common/Modal';
 import Select from '../components/common/Select';
+import PageTransition from '../components/common/PageTransition';
 
 const Equipment = () => {
   const { equipment, teams, addEquipment, updateEquipment, deleteEquipment, scrapEquipment, getRequestsByEquipment } = useApp();
@@ -184,6 +185,7 @@ const Equipment = () => {
 
 
   return (
+    <PageTransition>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -563,6 +565,7 @@ const Equipment = () => {
         </div>
       </Modal>
     </div>
+    </PageTransition>
   );
 };
 

@@ -14,8 +14,8 @@ const Card = ({
     lg: 'p-8',
   };
 
-  const baseStyles = 'bg-white rounded-lg shadow-sm border border-secondary-200 transition-shadow duration-200';
-  const hoverStyles = hover ? 'hover:shadow-md cursor-pointer' : '';
+  const baseStyles = 'bg-white rounded-xl shadow-sm border border-secondary-200 transition-all duration-300 ease-out';
+  const hoverStyles = hover ? 'hover:shadow-lg hover:-translate-y-1 cursor-pointer' : '';
 
   return (
     <div

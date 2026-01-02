@@ -107,10 +107,10 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, toggleCollapse }) => {
               to={item.href}
               onClick={() => window.innerWidth < 1024 && onClose()}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors
+                `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ease-out
                 ${isActive
-                  ? 'bg-primary-50 text-primary-700 font-medium'
-                  : 'text-secondary-700 hover:bg-secondary-100'
+                  ? 'bg-primary-50 text-primary-700 font-medium shadow-sm'
+                  : 'text-secondary-700 hover:bg-secondary-100 hover:translate-x-1'
                 }
                 ${isCollapsed ? 'justify-center' : ''}
                 `

@@ -17,6 +17,7 @@ import { useAuth } from '../context/AuthContext';
 import Card from '../components/common/Card';
 import Badge from '../components/common/Badge';
 import Button from '../components/common/Button';
+import PageTransition from '../components/common/PageTransition';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -116,6 +117,7 @@ const Dashboard = () => {
   }
 
   return (
+    <PageTransition>
     <div className="space-y-6">
       {/* Welcome Header */}
       <div className="bg-gradient-to-r from-primary-600 to-primary-800 rounded-2xl p-6 text-white">
@@ -349,6 +351,7 @@ const Dashboard = () => {
         </div>
       </Card>
     </div>
+    </PageTransition>
   );
 };
 

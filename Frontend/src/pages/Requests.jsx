@@ -8,6 +8,7 @@ import Button from '../components/common/Button';
 import Modal from '../components/common/Modal';
 import Input from '../components/common/Input';
 import Select from '../components/common/Select';
+import PageTransition from '../components/common/PageTransition';
 
 // Status mapping between frontend and backend
 const STATUS_MAP = {
@@ -177,6 +178,7 @@ const Requests = () => {
 
 
   return (
+    <PageTransition>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -502,6 +504,7 @@ const Requests = () => {
         )}
       </Modal>
     </div>
+    </PageTransition>
   );
 };
 

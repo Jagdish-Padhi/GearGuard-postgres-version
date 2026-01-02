@@ -38,13 +38,13 @@ const Modal = ({
       <div className="flex min-h-screen items-center justify-center p-4">
         {/* Backdrop */}
         <div
-          className="fixed inset-0 bg-sky-50/80 backdrop-blur-sm transition-opacity"
+          className="fixed inset-0 bg-secondary-900/30 backdrop-blur-sm modal-backdrop-enter"
           onClick={onClose}
         />
 
         {/* Modal */}
         <div
-          className={`relative bg-white rounded-lg shadow-xl ${sizes[size]} w-full max-h-[90vh] overflow-y-auto fade-in`}
+          className={`relative bg-white rounded-xl shadow-2xl ${sizes[size]} w-full max-h-[90vh] overflow-y-auto modal-content-enter`}
           {...props}
         >
           {/* Header */}
@@ -55,7 +55,7 @@ const Modal = ({
             {showCloseButton && (
               <button
                 onClick={onClose}
-                className="text-secondary-400 hover:text-secondary-600 transition-colors"
+                className="text-secondary-400 hover:text-secondary-600 hover:bg-secondary-100 rounded-lg p-1 transition-all"
               >
                 <X size={24} />
               </button>
@@ -69,7 +69,7 @@ const Modal = ({
 
           {/* Footer */}
           {footer && (
-            <div className="flex items-center justify-end gap-3 p-6 border-t border-secondary-200 bg-secondary-50">
+            <div className="flex items-center justify-end gap-3 p-6 border-t border-secondary-200 bg-secondary-50 rounded-b-xl">
               {footer}
             </div>
           )}
