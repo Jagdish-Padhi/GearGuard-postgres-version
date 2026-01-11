@@ -1,7 +1,7 @@
 import bcrypt, { hash } from "bcrypt";
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
-import { query, getOne, getMany, insertAndReturn } from "../database/queryHelper";
+import { query, getOne, getMany, insertAndReturn } from "../database/queryHelper.js";
 import { text } from "express";
 
 dotenv.config();
