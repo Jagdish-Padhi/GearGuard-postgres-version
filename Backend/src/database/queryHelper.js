@@ -22,7 +22,7 @@ export const getOne = async (text, params) => {
 // get multiple rows
 export  const  getMany = async (text, params)=>{
      const result = await query(text, params);
-     return result.rows[0] || null;
+     return result.rows;
 };
 
 // Insert and return
