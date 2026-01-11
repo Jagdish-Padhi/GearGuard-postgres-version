@@ -2,7 +2,6 @@ import bcrypt, { hash } from "bcrypt";
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 import { query, getOne, getMany, insertAndReturn } from "../database/queryHelper.js";
-import { text } from "express";
 
 dotenv.config();
 
@@ -25,6 +24,12 @@ export const findUserByEmail = async (email) => {
     const text = `SELECT * FROM users WHERE email = $1`;
     return getOne(text, [email]);
 };
+
+// Find user by id
+export const findUserById = async (id) => {
+    const text = `SELECT * FROM users WHERE id = $1`;
+    return getOne(text, [id]);
+}
 
 // Find user by username
 export const findUserByUsername = async (username) => {
