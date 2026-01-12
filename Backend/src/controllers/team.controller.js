@@ -103,14 +103,15 @@ export const deleteTeam = asyncHandler(async (req, res, next) => {
 });
 
 
-export const addTechnicianToTeam = asyncHandler(async (req, res, next) => {
-    const { teamId, technicianId } = req.body;
+export const addTechnician = asyncHandler(async (req, res, next) => {
+    const { id } = req.params;
+    const { technicianId } = req.body;
 
-    if (!teamId || !technicianId) {
+    if (!id || !technicianId) {
         throw new ApiError(400, "Team ID and Technician ID are required");
     }
 
-    const team = await TeamModel.getTeamById(teamId);
+    const team = await TeamModel.getTeamById(id);
     if (!team) {
         throw new ApiError(404, "Team not found");
     }
@@ -120,9 +121,9 @@ export const addTechnicianToTeam = asyncHandler(async (req, res, next) => {
         throw new ApiError(404, "Technician not found");
     }
 
-    await TeamModel.addTechnicianToTeam(teamId, technicianId);
+    await TeamModel.addTechnicianToTeam(id, technicianId);
 
-    const updatedTeam = await TeamModel.getTeamById(teamId);
+    const updatedTeam = await TeamModel.getTeamById(id);
 
     return res
         .status(200)
@@ -130,21 +131,22 @@ export const addTechnicianToTeam = asyncHandler(async (req, res, next) => {
 });
 
 
-export const removeTechnicianFromTeam = asyncHandler(async (req, res, next) => {
-    const { teamId, technicianId } = req.body;
+export const removeTechnician = asyncHandler(async (req, res, next) => {
+    const { id } = req.params;
+    const { technicianId } = req.body;
 
-    if (!teamId || !technicianId) {
+    if (!id || !technicianId) {
         throw new ApiError(400, "Team ID and Technician ID are required");
     }
 
-    const team = await TeamModel.getTeamById(teamId);
+    const team = await TeamModel.getTeamById(id);
     if (!team) {
         throw new ApiError(404, "Team not found");
     }
 
-    await TeamModel.removeTechnicianFromTeam(teamId, technicianId);
+    await TeamModel.removeTechnicianFromTeam(id, technicianId);
 
-    const updatedTeam = await TeamModel.getTeamById(teamId);
+    const updatedTeam = await TeamModel.getTeamById(id);
 
     return res
         .status(200)

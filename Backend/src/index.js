@@ -1,8 +1,7 @@
 import dotenv from 'dotenv';
 dotenv.config();
-import connectDB from './database/connect.js';
-import { app } from './app.js';
 import pool from './database/connect.js';
+import { app } from './app.js';
 
 // Test database connections
 pool.query('SELECT NOW()', (err, result) => {

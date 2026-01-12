@@ -1,4 +1,4 @@
-import { qeury, getOne, getMany, insertAndReturn, query } from '../database/queryHelper.js';
+import { query, getOne, getMany, insertAndReturn } from '../database/queryHelper.js';
 
 // Get all teams with technicians
 export const getAllTeams = async () => {

@@ -188,5 +188,3 @@ export const getEquipmentRequests = async (equipmentId) => {
     `;
     return getMany(text, [equipmentId]);
 };
-
-export const Request = mongoose.model("Request", requestSchema);
