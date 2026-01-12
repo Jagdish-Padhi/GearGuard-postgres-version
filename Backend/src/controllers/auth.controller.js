@@ -2,6 +2,8 @@ import * as UserModel from "../models/user.model.js";
 import { ApiError } from "../utils/apiError.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import jwt from "jsonwebtoken";
+
 
 // Cookie options
 const cookieOptions = {
@@ -31,7 +33,7 @@ export const register = asyncHandler(async (req, res) => {
 
     const existingUser = await UserModel.findUserByEmailOrUsername(email, username);
     if (existingUser) {
-        throw new ApiError(400, "User with email or username already exists");
+        throw new ApiError(409, "User with email or username already exists");
     }
 
     const user = await UserModel.createUser({
@@ -63,7 +65,7 @@ export const login = asyncHandler(
             throw new ApiError(401, "Invalid email or password");
         }
 
-        const { accessToken, refreshAccessToken } = await generateTokens(user);
+        const { accessToken, refreshToken } = await generateTokens(user);
 
         const loggedInUser = await UserModel.findUserById(user.id);
 
@@ -116,11 +118,12 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
 
         const { accessToken, refreshToken } = await generateTokens(user);
 
-        return res.status(200).cookie("accessToken", accessToken, cookieOptions)
+        return res.status(200)
+            .cookie("accessToken", accessToken, cookieOptions)
             .cookie("refreshToken", refreshToken, cookieOptions)
             .json(new ApiResponse(
                 200, { accessToken, refreshToken },
-                "Access token refreshed..."
+                "Access token refreshed successfully"
             ));
     } catch (error) {
         throw new ApiError(401, error?.message || "Invalid refresh token");
