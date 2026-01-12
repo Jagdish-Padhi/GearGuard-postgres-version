@@ -36,7 +36,8 @@ CREATE TABLE
         name VARCHAR(255) NOT NULL,
         serial_number VARCHAR(255) NOT NULL UNIQUE,
         location VARCHAR(255) NOT NULL UNIQUE,
-        assigned_team_id INTEGER REFERENCES maintainance_team (id) ON DELETE CASCADE status VARCHAR(20) DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'SCRAPPED')),
+        assigned_team_id INTEGER REFERENCES maintenance_teams (id) ON DELETE CASCADE,
+        status VARCHAR(20) DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'SCRAPPED')),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
