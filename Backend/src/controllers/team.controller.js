@@ -1,14 +1,12 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import { ApiError } from "../utils/apiError.js";
-import { MaintenanceTeam } from "../models/MaintenanceTeam.model.js";
-import { User } from "../models/user.model.js";
+import * as TeamModel from "../models/MaintenanceTeam.model.js";
+import * as UserModel from "../models/user.model.js";
 
 
 export const getAllTeams = asyncHandler(async (req, res, next) => {
-    const teams = await MaintenanceTeam.find()
-        .populate("technicians", "fullName email role")
-        .sort({ createdAt: -1 });
+    const teams = await TeamModel.getAllTeams();
 
     return res
         .status(200)
@@ -19,8 +17,7 @@ export const getAllTeams = asyncHandler(async (req, res, next) => {
 export const getTeamById = asyncHandler(async (req, res, next) => {
     const { id } = req.params;
 
-    const team = await MaintenanceTeam.findById(id)
-        .populate("technicians", "fullName email role");
+    const team = await TeamModel.getTeamById(id);
 
     if (!team) {
         throw new ApiError(404, "Team not found");
@@ -39,19 +36,20 @@ export const createTeam = asyncHandler(async (req, res, next) => {
         throw new ApiError(400, "Team name is required");
     }
 
-    // if team name already exists
-    const existingTeam = await MaintenanceTeam.findOne({ name });
+    const existingTeam = await TeamModel.checkTeamNameExists(name);
     if (existingTeam) {
         throw new ApiError(400, "Team with this name already exists");
     }
 
-    const team = await MaintenanceTeam.create({
-        name,
-        technicians: technicians || [],
-    });
+    const team = await TeamModel.createTeam(name);
 
-    const populatedTeam = await MaintenanceTeam.findById(team._id)
-        .populate("technicians", "fullName email role");
+    if (technicians && technicians.length > 0) {
+        for (const technicianId of technicians) {
+            await TeamModel.addTechnicianToTeam(team.id, technicianId);
+        }
+    }
+
+    const populatedTeam = await TeamModel.getTeamById(team.id);
 
     return res
         .status(201)
@@ -63,25 +61,24 @@ export const updateTeam = asyncHandler(async (req, res, next) => {
     const { id } = req.params;
     const { name } = req.body;
 
-    const team = await MaintenanceTeam.findById(id);
+    const team = await TeamModel.getTeamById(id);
 
     if (!team) {
         throw new ApiError(404, "Team not found");
     }
 
-    // name uniqueness if updating
     if (name && name !== team.name) {
-        const existingTeam = await MaintenanceTeam.findOne({ name });
+        const existingTeam = await TeamModel.checkTeamNameExists(name, id);
         if (existingTeam) {
             throw new ApiError(400, "Team with this name already exists");
         }
-        team.name = name;
     }
 
-    await team.save();
+    if (name) {
+        await TeamModel.updateTeam(id, name);
+    }
 
-    const updatedTeam = await MaintenanceTeam.findById(id)
-        .populate("technicians", "fullName email role");
+    const updatedTeam = await TeamModel.getTeamById(id);
 
     return res
         .status(200)
@@ -92,13 +89,13 @@ export const updateTeam = asyncHandler(async (req, res, next) => {
 export const deleteTeam = asyncHandler(async (req, res, next) => {
     const { id } = req.params;
 
-    const team = await MaintenanceTeam.findById(id);
+    const team = await TeamModel.getTeamById(id);
 
     if (!team) {
         throw new ApiError(404, "Team not found");
     }
 
-    await MaintenanceTeam.findByIdAndDelete(id);
+    await TeamModel.deleteTeam(id);
 
     return res
         .status(200)
@@ -106,72 +103,50 @@ export const deleteTeam = asyncHandler(async (req, res, next) => {
 });
 
 
-export const addTechnician = asyncHandler(async (req, res, next) => {
-    const { id } = req.params;  // team id
-    const { technicianId } = req.body;
+export const addTechnicianToTeam = asyncHandler(async (req, res, next) => {
+    const { teamId, technicianId } = req.body;
 
-    if (!technicianId) {
-        throw new ApiError(400, "Technician ID is required");
+    if (!teamId || !technicianId) {
+        throw new ApiError(400, "Team ID and Technician ID are required");
     }
 
-    const team = await MaintenanceTeam.findById(id);
+    const team = await TeamModel.getTeamById(teamId);
     if (!team) {
         throw new ApiError(404, "Team not found");
     }
 
-    // Check if user exists and is a technician
-    const user = await User.findById(technicianId);
-    if (!user) {
-        throw new ApiError(404, "User not found");
-    }
-    if (user.role !== "TECHNICIAN") {
-        throw new ApiError(400, "User must have TECHNICIAN role");
+    const technician = await UserModel.findUserById(technicianId);
+    if (!technician || technician.role !== "TECHNICIAN") {
+        throw new ApiError(404, "Technician not found");
     }
 
-    // if already in team
-    if (team.technicians.includes(technicianId)) {
-        throw new ApiError(400, "Technician is already in this team");
-    }
+    await TeamModel.addTechnicianToTeam(teamId, technicianId);
 
-    team.technicians.push(technicianId);
-    await team.save();
-
-    const updatedTeam = await MaintenanceTeam.findById(id)
-        .populate("technicians", "fullName email role");
+    const updatedTeam = await TeamModel.getTeamById(teamId);
 
     return res
         .status(200)
-        .json(new ApiResponse(200, updatedTeam, "Technician added successfully"));
+        .json(new ApiResponse(200, updatedTeam, "Technician added to team successfully"));
 });
 
 
-export const removeTechnician = asyncHandler(async (req, res, next) => {
-    const { id } = req.params;  // team id
-    const { technicianId } = req.body;
+export const removeTechnicianFromTeam = asyncHandler(async (req, res, next) => {
+    const { teamId, technicianId } = req.body;
 
-    if (!technicianId) {
-        throw new ApiError(400, "Technician ID is required");
+    if (!teamId || !technicianId) {
+        throw new ApiError(400, "Team ID and Technician ID are required");
     }
 
-    const team = await MaintenanceTeam.findById(id);
+    const team = await TeamModel.getTeamById(teamId);
     if (!team) {
         throw new ApiError(404, "Team not found");
     }
 
-    // Check if technician is in team
-    if (!team.technicians.includes(technicianId)) {
-        throw new ApiError(400, "Technician is not in this team");
-    }
+    await TeamModel.removeTechnicianFromTeam(teamId, technicianId);
 
-    team.technicians = team.technicians.filter(
-        (t) => t.toString() !== technicianId
-    );
-    await team.save();
-
-    const updatedTeam = await MaintenanceTeam.findById(id)
-        .populate("technicians", "fullName email role");
+    const updatedTeam = await TeamModel.getTeamById(teamId);
 
     return res
         .status(200)
-        .json(new ApiResponse(200, updatedTeam, "Technician removed successfully"));
+        .json(new ApiResponse(200, updatedTeam, "Technician removed from team successfully"));
 });
