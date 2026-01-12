@@ -1,6 +1,6 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/apiError.js";
-import { User } from "../models/user.model.js";
+import * as UserModel from "../models/user.model.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 
 // Get current user
@@ -18,16 +18,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
         throw new ApiError(400, "At least one field is required");
     }
 
-    const user = await User.findByIdAndUpdate(
-        req.user._id,
-        {
-            $set: {
-                ...(fullName && { fullName }),
-                ...(email && { email }),
-            },
-        },
-        { new: true }
-    ).select("-password -refreshToken");
+    const user = await UserModel.updatedUser(req.user.id, { fullName, email })
 
     return res
         .status(200)
@@ -42,16 +33,15 @@ const changePassword = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Old and new password are required");
     }
 
-    const user = await User.findById(req.user._id);
+    const user = await UserModel.findById(req.user._id);
 
-    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
+    const isPasswordValid = await user.isPasswordCorrect(oldPassword, user.password);
 
-    if (!isPasswordCorrect) {
+    if (!isPasswordValid) {
         throw new ApiError(400, "Invalid old password");
     }
 
-    user.password = newPassword;
-    await user.save({ validateBeforeSave: false });
+    await UserModel.updatePassword(user.id, newPassword)
 
     return res
         .status(200)
@@ -60,8 +50,7 @@ const changePassword = asyncHandler(async (req, res) => {
 
 // Get all technicians (for team assignment)
 const getAllTechnicians = asyncHandler(async (req, res) => {
-    const technicians = await User.find({ role: "TECHNICIAN" })
-        .select("-password -refreshToken");
+    const technicians = await UserModel.getAllTechnicians();
 
     return res
         .status(200)
@@ -70,14 +59,9 @@ const getAllTechnicians = asyncHandler(async (req, res) => {
 
 // Get all users (with optional role filter)
 const getAllUsers = asyncHandler(async (req, res) => {
-    const filter = {};
-    
-    if (req.query.role) {
-        filter.role = req.query.role;
-    }
+    const role = req.query.role || null;
 
-    const users = await User.find(filter)
-        .select("-password -refreshToken");
+    const users = await UserModel.getAllUsers(role);
 
     return res
         .status(200)
