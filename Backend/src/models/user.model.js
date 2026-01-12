@@ -64,7 +64,7 @@ export const getAllTechnicians = async () => {
 };
 
 // Update user
-export const updatedUser = async (id, updateData) => {
+export const updateUser = async (id, updateData) => {
     const { fullName, email } = updateData;
     const text = `
     UPDATE users

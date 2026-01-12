@@ -18,7 +18,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
         throw new ApiError(400, "At least one field is required");
     }
 
-    const user = await UserModel.updatedUser(req.user.id, { fullName, email })
+    const user = await UserModel.updateUser(req.user.id, { fullName, email })
 
     return res
         .status(200)
