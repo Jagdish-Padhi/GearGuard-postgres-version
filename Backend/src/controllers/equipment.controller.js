@@ -1,23 +1,21 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import { ApiError } from "../utils/apiError.js";
-import { Equipment } from "../models/equipment.model.js";
-import { Request } from "../models/request.model.js";
+import * as EquipmentModel from "../models/equipment.model.js";
+import * as RequestModel from "../models/request.model.js";
 
 
 export const getAllEquipment = asyncHandler(async (req, res, next) => {
-    const filter = {};
+    const filters = {};
 
     if (req.query.status) {
-        filter.status = req.query.status;
+        filters.status = req.query.status;
     }
     if (req.query.location) {
-        filter.location = req.query.location;
+        filters.location = req.query.location;
     }
 
-    const equipment = await Equipment.find(filter)
-        .populate("assignedTeam", "name")
-        .sort({ createdAt: -1 });
+    const equipment = await EquipmentModel.getAllEquipment(filters);
 
     return res
         .status(200)
@@ -28,8 +26,7 @@ export const getAllEquipment = asyncHandler(async (req, res, next) => {
 export const getEquipmentById = asyncHandler(async (req, res, next) => {
     const { id } = req.params;
 
-    const equipment = await Equipment.findById(id)
-        .populate("assignedTeam", "name technicians");
+    const equipment = await EquipmentModel.getEquipmentById(id);
 
     if (!equipment) {
         throw new ApiError(404, "Equipment not found");
@@ -48,25 +45,21 @@ export const createEquipment = asyncHandler(async (req, res, next) => {
         throw new ApiError(400, "Name, serial number and location are required");
     }
 
-    // if serial number already exists
-    const existingEquipment = await Equipment.findOne({ serialNumber });
+    const existingEquipment = await EquipmentModel.checkSerialNumberExists(serialNumber);
     if (existingEquipment) {
         throw new ApiError(400, "Equipment with this serial number already exists");
     }
 
-    const equipment = await Equipment.create({
+    const equipment = await EquipmentModel.createEquipment({
         name,
         serialNumber,
         location,
         assignedTeam: assignedTeam || null,
     });
 
-    const populatedEquipment = await Equipment.findById(equipment._id)
-        .populate("assignedTeam", "name");
-
     return res
         .status(201)
-        .json(new ApiResponse(201, populatedEquipment, "Equipment created successfully"));
+        .json(new ApiResponse(201, equipment, "Equipment created successfully"));
 });
 
 
@@ -74,29 +67,25 @@ export const updateEquipment = asyncHandler(async (req, res, next) => {
     const { id } = req.params;
     const { name, serialNumber, location, assignedTeam } = req.body;
 
-    const equipment = await Equipment.findById(id);
+    const equipment = await EquipmentModel.getEquipmentById(id);
 
     if (!equipment) {
         throw new ApiError(404, "Equipment not found");
     }
 
-    //  serial number uniqueness if updating
-    if (serialNumber && serialNumber !== equipment.serialNumber) {
-        const existingEquipment = await Equipment.findOne({ serialNumber });
+    if (serialNumber && serialNumber !== equipment.serial_number) {
+        const existingEquipment = await EquipmentModel.checkSerialNumberExists(serialNumber, id);
         if (existingEquipment) {
             throw new ApiError(400, "Equipment with this serial number already exists");
         }
     }
 
-    if (name) equipment.name = name;
-    if (serialNumber) equipment.serialNumber = serialNumber;
-    if (location) equipment.location = location;
-    if (assignedTeam !== undefined) equipment.assignedTeam = assignedTeam;
-
-    await equipment.save();
-
-    const updatedEquipment = await Equipment.findById(id)
-        .populate("assignedTeam", "name");
+    const updatedEquipment = await EquipmentModel.updateEquipment(id, {
+        name,
+        serialNumber,
+        location,
+        assignedTeam
+    });
 
     return res
         .status(200)
@@ -107,13 +96,13 @@ export const updateEquipment = asyncHandler(async (req, res, next) => {
 export const deleteEquipment = asyncHandler(async (req, res, next) => {
     const { id } = req.params;
 
-    const equipment = await Equipment.findById(id);
+    const equipment = await EquipmentModel.getEquipmentById(id);
 
     if (!equipment) {
         throw new ApiError(404, "Equipment not found");
     }
 
-    await Equipment.findByIdAndDelete(id);
+    await EquipmentModel.deleteEquipment(id);
 
     return res
         .status(200)
@@ -124,7 +113,7 @@ export const deleteEquipment = asyncHandler(async (req, res, next) => {
 export const scrapEquipment = asyncHandler(async (req, res, next) => {
     const { id } = req.params;
 
-    const equipment = await Equipment.findById(id);
+    const equipment = await EquipmentModel.getEquipmentById(id);
 
     if (!equipment) {
         throw new ApiError(404, "Equipment not found");
@@ -134,30 +123,25 @@ export const scrapEquipment = asyncHandler(async (req, res, next) => {
         throw new ApiError(400, "Equipment is already scrapped");
     }
 
-    equipment.status = "SCRAPPED";
-    await equipment.save();
+    const scrappedEquipment = await EquipmentModel.scrapEquipment(id);
 
     return res
         .status(200)
-        .json(new ApiResponse(200, equipment, "Equipment scrapped successfully"));
+        .json(new ApiResponse(200, scrappedEquipment, "Equipment scrapped successfully"));
 });
 
 
 export const getEquipmentRequests = asyncHandler(async (req, res, next) => {
     const { id } = req.params;
 
-    const equipment = await Equipment.findById(id);
+    const equipment = await EquipmentModel.getEquipmentById(id);
 
     if (!equipment) {
         throw new ApiError(404, "Equipment not found");
     }
 
-    const requests = await Request.find({ equipment: id })
-        .populate("assignedTeam", "name")
-        .populate("requestedBy", "fullName email")
-        .sort({ createdAt: -1 });
+    const requests = await RequestModel.getEquipmentRequests(id);
 
-    // pending/open requests
     const pendingCount = requests.filter(r => r.status === "NEW" || r.status === "IN_PROGRESS").length;
 
     return res.status(200).json(
