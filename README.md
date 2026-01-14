@@ -75,7 +75,7 @@ A centralized maintenance tracking system connecting equipment, teams, and reque
 |-------|------------|
 | **Frontend** | React 18, Vite, TailwindCSS, React Router v6 |
 | **Backend** | Node.js, Express.js, REST API |
-| **Database** | MongoDB Atlas, Mongoose ODM |
+| **Database** | PostgreSQL, Plain SQL without ORM |
 | **Auth** | JWT (Access + Refresh Tokens), bcrypt |
 | **State** | React Context API |
 | **Icons** | Lucide React |
