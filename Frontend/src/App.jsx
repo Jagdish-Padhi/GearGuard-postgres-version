@@ -17,6 +17,8 @@ import Requests from './pages/Requests';
 import Calendar from './pages/Calendar';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
+import Billing from './pages/Billing';
+
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -86,6 +88,7 @@ function AppRoutes() {
         <Route path="calendar" element={<Calendar />} />
         <Route path="reports" element={<Reports />} />
         <Route path="settings" element={<Settings />} />
+        <Route path="billings" element={<Billing />} />
       </Route>
 
       {/* Catch all */}

@@ -19,6 +19,7 @@ export const AppProvider = ({ children }) => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [ payments, setPayments] = useState([]);
 
 
   // Fetch all data when authenticated
@@ -289,6 +290,11 @@ export const AppProvider = ({ children }) => {
     addRequest,
     updateRequest,
     deleteRequest,
+
+    // Payments
+    payments,
+    fetchPayments,
+    createPayment,
 
     // Helpers
     getEquipmentById,

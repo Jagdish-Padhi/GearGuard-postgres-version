@@ -1,4 +1,5 @@
 import React from 'react';
+import { CreditCard } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -25,6 +26,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, toggleCollapse }) => {
     { name: 'Calendar', href: '/calendar', icon: Calendar, roles: ['USER', 'MANAGER', 'TECHNICIAN'] },
     { name: 'Reports', href: '/reports', icon: BarChart3, roles: ['MANAGER'] },
     { name: 'Settings', href: '/settings', icon: Settings, roles: ['MANAGER'] },
+    { name: 'Billing', path: '/billing', icon: CreditCard, roles: ['all']},
   ];
 
   const filteredNavigation = navigation.filter(item =>
