@@ -62,6 +62,29 @@ CREATE TABLE
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
 
+-- Payments table
+CREATE TABLE
+    IF NOT EXISTS payments (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+        equipment_id INTEGER REFERENCES equipment (id) ON DELETE SET NULL,
+        request_id INTEGER REFERENCES requests (id) ON DELETE SET NULL,
+        razorpay_order_id VARCHAR(255) UNIQUE,
+        razorpay_payment_id VARCHAR(255) UNIQUE,
+        razorpay_signature VARCHAR(255),
+        amount DECIMAL(10, 2) NOT NULL,
+        currency VARCHAR(3) DEFAULT 'INR',
+        status VARCHAR(20) DEFAULT 'PENDING' CHECK (
+            status IN ('PENDING', 'COMPLETED', 'FAILED', 'REFUNDED')
+        ),
+        payment_type VARCHAR(20) CHECK (
+            payment_type IN ('RENTAL', 'SERVICE', 'SUBSCRIPTION')
+        ),
+        description TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
 -- Indexes for performance
 CREATE INDEX idx_users_email ON users (email);
 
@@ -74,3 +97,9 @@ CREATE INDEX idx_requests_equipment ON requests (equipment_id);
 CREATE INDEX idx_requests_team ON requests (assigned_team_id);
 
 CREATE INDEX idx_requests_status ON requests (status);
+
+CREATE INDEX idx_payments_user ON payments (user_id);
+
+CREATE INDEX idx_payments_status ON payments (status);
+
+CREATE INDEX idx_payments_razorpay_order ON payments (razorpay_order_id);
