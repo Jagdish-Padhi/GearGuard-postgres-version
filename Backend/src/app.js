@@ -31,12 +31,14 @@ import userRoutes from './routes/user.route.js';
 import equipmentRoutes from './routes/equipment.route.js';
 import teamRoutes from './routes/team.route.js';
 import requestRoutes from './routes/request.route.js';
+import paymentRoutes from './routes/payment.route.js';
 
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/equipment', equipmentRoutes);
 app.use('/api/v1/teams', teamRoutes);
 app.use('/api/v1/requests', requestRoutes);
+app.use('/api/v1/payments', paymentRoutes);
 
 // error handler
 app.use(globalErrorHandler);
